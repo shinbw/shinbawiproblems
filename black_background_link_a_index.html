@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Clickable A Link</title>
+  <style>
+    :root{
+      --bg:#000;
+      --accent:#ffffff;
+      --accent-2:#cccccc;
+      --focus: 3px solid rgba(255,255,255,0.25);
+    }
+    html,body{height:100%;margin:0}
+    body{
+      background:var(--bg);
+      color:var(--accent);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      -webkit-font-smoothing:antialiased;
+      display:grid;
+      place-items:center;
+    }
+    .card{
+      text-align:center;
+    }
+    .link-a{
+      display:inline-block;
+      padding:1rem 1.6rem;
+      font-size:1.25rem;
+      font-weight:600;
+      color:var(--bg);
+      background:var(--accent);
+      border-radius:12px;
+      text-decoration:none;
+      box-shadow:0 6px 18px rgba(0,0,0,0.6);
+      transition:transform .14s ease, box-shadow .14s ease, opacity .14s ease;
+    }
+    .link-a:focus{outline:var(--focus);}
+    .link-a:hover{transform:translateY(-4px);}
+    .muted{margin-top:1rem;color:var(--accent-2);font-size:.9rem}
+    /* Dark-mode friendly focus ring for keyboard users */
+    @media (prefers-reduced-motion: reduce){
+      .link-a{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <!-- 클릭 가능한 링크 A. href를 원하는 주소로 바꾸세요 -->
+    <a class="link-a" id="linkA" href="https://example.com" target="_blank" rel="noopener noreferrer">A</a>
+    <div class="muted">Click the button above — it opens in a new tab.</div>
+  </main>
+</body>
+</html>
