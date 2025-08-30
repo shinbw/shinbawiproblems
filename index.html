@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Clickable A Link</title>
+  <title>Clickable Link</title>
   <style>
     :root{
       --bg:#000;
@@ -38,7 +38,6 @@
     .link-a:focus{outline:var(--focus);}
     .link-a:hover{transform:translateY(-4px);}
     .muted{margin-top:1rem;color:var(--accent-2);font-size:.9rem}
-    /* Dark-mode friendly focus ring for keyboard users */
     @media (prefers-reduced-motion: reduce){
       .link-a{transition:none}
     }
@@ -46,9 +45,9 @@
 </head>
 <body>
   <main class="card" role="main">
-    <!-- 클릭 가능한 링크 A. href를 원하는 주소로 바꾸세요 -->
-    <a class="link-a" id="linkA" href="https://example.com" target="_blank" rel="noopener noreferrer">A</a>
-    <div class="muted">Click the button above — it opens in a new tab.</div>
+    <!-- 클릭 가능한 링크. href를 원하는 주소로 바꿨습니다 -->
+    <a class="link-a" id="linkA" href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K?usp=sharing" target="_blank" rel="noopener noreferrer">클릭</a>
+    <div class="muted">신바위 수학 과학 연구소</div>
   </main>
 </body>
 </html>
