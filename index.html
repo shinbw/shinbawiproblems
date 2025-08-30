@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>구글드라이브 외부로 열기</title>
+  <title>구글에서 링크 실행</title>
   <style>
     :root{--bg:#000;--fg:#fff;--muted:#ccc;--btn:#fff;--btnfg:#000}
     html,body{height:100%;margin:0}
@@ -17,67 +17,87 @@
   </style>
 </head>
 <body>
+  <!-- 실패 시 카톡 사용자 안내 오버레이 -->
   <div id="fallback" class="wrap">
     <h1>카카오톡 인앱 브라우저에서 열렸습니다</h1>
-    <p>
-      <strong>오른쪽 아래 <span class="kbd">⋯</span> 버튼 → 다른 브라우저에서 열기</strong><br>
-      를 눌러주세요.
-    </p>
+    <p><strong>오른쪽 아래 <span class="kbd">⋯</span> → “다른 브라우저에서 열기”</strong>를 눌러주세요.</p>
     <button id="copyBtn" class="btn">링크 복사 → 다른 브라우저에서 붙여넣어 실행</button>
   </div>
 
   <script>
-    // === 설정: 이동할 구글드라이브 주소 ===
-    const DRIVE_URL = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K?usp=sharing";
+    // === 설정: 대상 Google Drive 폴더 ID ===
+    const FOLDER_ID = "1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
 
-    const ua = navigator.userAgent || navigator.vendor || window.opera || "";
-    const lo = ua.toLowerCase();
-    const isKakao = lo.includes("kakaotalk");
-    const isAndroid = lo.includes("android");
-    const isIOS = lo.includes("iphone") || lo.includes("ipad") || lo.includes("ipod");
+    // 표준 웹 URL (백업용)
+    const DRIVE_WEB_URL = `https://drive.google.com/drive/folders/${FOLDER_ID}?usp=sharing`;
 
+    // **안드로이드 앱/크롬 호출**
+    const ANDROID_INTENT_DRIVE =
+      `intent://drive.google.com/drive/folders/${FOLDER_ID}` +
+      `#Intent;scheme=https;package=com.google.android.apps.docs;end`;
+
+    const ANDROID_INTENT_CHROME =
+      `intent://drive.google.com/drive/folders/${FOLDER_ID}` +
+      `#Intent;scheme=https;package=com.android.chrome;end`;
+
+    // **iOS 앱/크롬 스킴** (설치 필요)
+    // 구글 드라이브 앱 스킴 (폴더 열기)
+    const IOS_DRIVE_SCHEME = `googledrive://folder/${FOLDER_ID}`;
+    // iOS 크롬 스킴(https→googlechromes)
+    const IOS_CHROME_SCHEME =
+      `googlechromes://drive.google.com/drive/folders/${FOLDER_ID}`;
+
+    // 환경 감지
+    const ua = (navigator.userAgent || navigator.vendor || window.opera || "").toLowerCase();
+    const isKakao = ua.includes("kakaotalk");
+    const isAndroid = ua.includes("android");
+    const isIOS = ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod");
+
+    // 오버레이 엘리먼트
     const $fallback = document.getElementById("fallback");
     const $copyBtn = document.getElementById("copyBtn");
 
+    // 복사 버튼
     $copyBtn.addEventListener("click", async () => {
       try {
-        await navigator.clipboard.writeText(DRIVE_URL);
+        await navigator.clipboard.writeText(DRIVE_WEB_URL);
         $copyBtn.textContent = "복사됨! 브라우저에 붙여넣어 실행하세요.";
-      } catch (e) {
-        alert("복사에 실패했습니다. 아래 주소를 수동으로 복사해주세요:\n" + DRIVE_URL);
+      } catch {
+        alert("복사에 실패했습니다. 아래 주소를 수동으로 복사해주세요:\n" + DRIVE_WEB_URL);
       }
     });
 
-    // 카톡 외부 → 그냥 이동
-    if (!isKakao) {
-      location.replace(DRIVE_URL);
-    } else {
-      // 카톡 인앱: 우선 외부로 띄우기 시도
-      const tryAndroidIntentToChrome =
-        "intent://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K#Intent;scheme=https;package=com.android.chrome;end";
-      const tryAndroidIntentToDriveApp =
-        "intent://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K#Intent;scheme=https;package=com.google.android.apps.docs;end";
-      const tryIOSChromeScheme =
-        "googlechromes://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+    // 외부 앱/크롬 실행 시도 실패 감지용
+    let switched = false;
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) switched = true;
+    }, { once: true });
 
-      const showTip = () => { $fallback.classList.add("show"); };
+    const showTip = () => $fallback.classList.add("show");
 
-      let switched = false;
-      const onHide = () => { switched = true; };
-      document.addEventListener("visibilitychange", onHide, { once: true });
-
+    // 공통 실행 로직
+    function openViaGoogle() {
       if (isAndroid) {
-        location.href = tryAndroidIntentToChrome;
-        setTimeout(() => { if (!switched) location.href = tryAndroidIntentToDriveApp; }, 800);
+        // 1) 구글 드라이브 앱 → 2) 크롬 → 3) 실패 시 안내
+        location.href = ANDROID_INTENT_DRIVE;
+        setTimeout(() => { if (!switched) location.href = ANDROID_INTENT_CHROME; }, 700);
         setTimeout(() => { if (!switched) showTip(); }, 1400);
       } else if (isIOS) {
-        location.href = tryIOSChromeScheme;
-        setTimeout(() => { if (!switched) showTip(); }, 900);
+        // 1) 드라이브 앱 스킴 → 2) 크롬 스킴 → 3) 실패 시 안내
+        location.href = IOS_DRIVE_SCHEME;
+        setTimeout(() => { if (!switched) location.href = IOS_CHROME_SCHEME; }, 700);
+        setTimeout(() => { if (!switched) showTip(); }, 1400);
       } else {
-        location.href = DRIVE_URL;
-        setTimeout(() => { if (!switched) showTip(); }, 900);
+        // 데스크톱 등: 웹으로
+        location.replace(DRIVE_WEB_URL);
       }
     }
+
+    // 카톡 여부와 무관하게 "구글에서 실행"을 먼저 시도
+    openViaGoogle();
+
+    // 추가: 카톡 인앱이고, 위 시도가 막혔다면 안내 오버레이가 뜹니다.
+    // (iOS는 사파리 강제 불가 → 사용자가 '다른 브라우저에서 열기' 선택 필요)
   </script>
 </body>
 </html>
