@@ -3,50 +3,80 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>구글드라이브 외부 열기</title>
+  <title>구글드라이브 외부로 열기</title>
   <style>
-    body{margin:0;display:grid;place-items:center;height:100vh;background:#000;color:#fff;font-family:system-ui}
-    .wrap{text-align:center}
-    a{display:block;margin:.5rem 0;padding:1rem 1.4rem;border-radius:10px;text-decoration:none;font-weight:700}
-    .btn{background:#fff;color:#000}
-    .sub{margin-top:1rem;font-size:.85rem;opacity:.7}
+    :root{--bg:#000;--fg:#fff;--muted:#ccc;--btn:#fff;--btnfg:#000}
+    html,body{height:100%;margin:0}
+    body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;display:grid;place-items:center}
+    .wrap{display:none;max-width:680px;padding:1.2rem;text-align:center}
+    .wrap.show{display:block}
+    h1{font-size:1.2rem;margin:0 0 .75rem}
+    p{margin:.5rem 0;color:var(--muted);line-height:1.6}
+    .btn{background:var(--btn);color:var(--btnfg);border:0;border-radius:12px;padding:.9rem 1.2rem;font-weight:700;text-decoration:none;cursor:pointer;margin-top:1rem}
+    .kbd{display:inline-block;border:1px solid #888;border-bottom-width:2px;border-radius:6px;padding:.2rem .45rem;margin:0 .2rem;background:#111;color:#eee}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h2>구글 드라이브 열기</h2>
-    <div id="auto"></div>
-    <!-- 수동 버튼들 -->
-    <a class="btn" href="intent://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K#Intent;scheme=https;package=com.android.chrome;end">
-      안드로이드: 크롬으로 열기
-    </a>
-    <a class="btn" href="intent://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K#Intent;scheme=https;package=com.google.android.apps.docs;end">
-      안드로이드: 드라이브 앱으로 열기
-    </a>
-    <a class="btn" href="googlechromes://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K">
-      아이폰: 크롬으로 열기
-    </a>
-    <a class="btn" href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K" target="_blank">
-      일반 링크 (안 될 때 대비)
-    </a>
-    <div class="sub">자동으로 안 되면 위 버튼 중 하나를 눌러주세요.</div>
+  <div id="fallback" class="wrap">
+    <h1>카카오톡 인앱 브라우저에서 열렸습니다</h1>
+    <p>
+      <strong>오른쪽 아래 <span class="kbd">⋯</span> 버튼 → 다른 브라우저에서 열기</strong><br>
+      를 눌러주세요.
+    </p>
+    <button id="copyBtn" class="btn">링크 복사 → 다른 브라우저에서 붙여넣어 실행</button>
   </div>
 
   <script>
-    const url = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
-    const ua = navigator.userAgent.toLowerCase();
+    // === 설정: 이동할 구글드라이브 주소 ===
+    const DRIVE_URL = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K?usp=sharing";
 
-    if(ua.includes("android")){
-      // 안드로이드 → 크롬 호출
-      window.location.href =
-        "intent://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K#Intent;scheme=https;package=com.android.chrome;end";
-    } else if(ua.includes("iphone") || ua.includes("ipad")){
-      // iOS → 크롬 스킴 호출 (크롬 없으면 무시됨)
-      window.location.href =
-        "googlechromes://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+    const ua = navigator.userAgent || navigator.vendor || window.opera || "";
+    const lo = ua.toLowerCase();
+    const isKakao = lo.includes("kakaotalk");
+    const isAndroid = lo.includes("android");
+    const isIOS = lo.includes("iphone") || lo.includes("ipad") || lo.includes("ipod");
+
+    const $fallback = document.getElementById("fallback");
+    const $copyBtn = document.getElementById("copyBtn");
+
+    $copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(DRIVE_URL);
+        $copyBtn.textContent = "복사됨! 브라우저에 붙여넣어 실행하세요.";
+      } catch (e) {
+        alert("복사에 실패했습니다. 아래 주소를 수동으로 복사해주세요:\n" + DRIVE_URL);
+      }
+    });
+
+    // 카톡 외부 → 그냥 이동
+    if (!isKakao) {
+      location.replace(DRIVE_URL);
     } else {
-      // PC 등 → 그냥 새창
-      window.location.href = url;
+      // 카톡 인앱: 우선 외부로 띄우기 시도
+      const tryAndroidIntentToChrome =
+        "intent://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K#Intent;scheme=https;package=com.android.chrome;end";
+      const tryAndroidIntentToDriveApp =
+        "intent://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K#Intent;scheme=https;package=com.google.android.apps.docs;end";
+      const tryIOSChromeScheme =
+        "googlechromes://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+
+      const showTip = () => { $fallback.classList.add("show"); };
+
+      let switched = false;
+      const onHide = () => { switched = true; };
+      document.addEventListener("visibilitychange", onHide, { once: true });
+
+      if (isAndroid) {
+        location.href = tryAndroidIntentToChrome;
+        setTimeout(() => { if (!switched) location.href = tryAndroidIntentToDriveApp; }, 800);
+        setTimeout(() => { if (!switched) showTip(); }, 1400);
+      } else if (isIOS) {
+        location.href = tryIOSChromeScheme;
+        setTimeout(() => { if (!switched) showTip(); }, 900);
+      } else {
+        location.href = DRIVE_URL;
+        setTimeout(() => { if (!switched) showTip(); }, 900);
+      }
     }
   </script>
 </body>
