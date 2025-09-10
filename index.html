@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>신바위 문제</title>
 
-  <!-- PWA 연결 (GitHub Pages 하위 경로에 맞춰 절대경로 사용) -->
+  <!-- PWA 연결 -->
   <link rel="manifest" href="/shinbawiproblems/manifest.json" />
   <meta name="theme-color" content="#0d47a1" />
 
@@ -15,15 +15,27 @@
       navigator.serviceWorker.register("/shinbawiproblems/sw.js").catch(()=>{});
     }
   </script>
-
-  <!-- ★ 자동 이동(리다이렉트) 금지: meta refresh, window.location, setTimeout 이동 코드 일절 없음 -->
 </head>
 <body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,Arial,sans-serif; background:#fafafa;">
+
+  <script>
+    // 앱 모드인지 확인 (설치된 PWA 실행 여부)
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone;
+
+    if (isStandalone) {
+      // 앱으로 실행되면 바로 신바위 연구소 구글드라이브로 이동
+      window.location.href = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+    }
+  </script>
+
+  <!-- 앱 설치 전이라면 첫 화면 -->
   <section style="max-width:960px;margin:40px auto;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center">
-    <!-- 왼쪽: 구글드라이브 입장 -->
+    <!-- 왼쪽: 신바위 연구소 구글드라이브 -->
     <a href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K"
        style="display:block;text-align:center;padding:18px 16px;border:1px solid #e5e7eb;border-radius:12px;text-decoration:none;font-weight:700;background:#fff;">
-      구글드라이브 입장
+      신바위 연구소 입장
     </a>
 
     <!-- 오른쪽: 앱 설치 버튼 -->
@@ -37,7 +49,6 @@
   </section>
 
   <script>
-    // iOS Safari는 beforeinstallprompt 미지원 → 안내만 표시
     const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
@@ -48,10 +59,9 @@
     if (isiOS && isSafari) {
       installBtn.disabled = true;
       installBtn.style.cursor = "not-allowed";
-      installMsg.innerHTML = "iPhone/Safari는 <b>공유 버튼(⬆️) → 홈 화면에 추가</b>로 설치합니다.";
+      installMsg.innerHTML = "iPhone/Safari는 <b>공유 버튼(⬆️) → 홈 화면에 추가</b>로 설치하세요.";
     }
 
-    // 설치 가능 신호 오면 버튼 활성화
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -60,7 +70,6 @@
       installMsg.textContent = "앱 설치가 가능합니다. 버튼을 눌러 설치하세요.";
     });
 
-    // 설치 버튼 클릭 → 설치 팝업
     installBtn.addEventListener("click", async () => {
       if (!deferredPrompt) {
         installMsg.textContent = "아직 설치 준비 중입니다. 새로고침(Ctrl+Shift+R) 후 다시 시도하세요.";
@@ -74,7 +83,6 @@
       installBtn.style.cursor = "not-allowed";
     });
 
-    // 설치 완료 이벤트
     window.addEventListener("appinstalled", () => {
       installMsg.textContent = "설치 완료! 바탕화면/앱 목록에서 실행하세요.";
       installBtn.disabled = true;
