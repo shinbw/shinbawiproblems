@@ -15,6 +15,17 @@
     .btn{background:var(--btn);color:var(--btnfg);border:0;border-radius:12px;padding:.9rem 1.2rem;font-weight:700;text-decoration:none;cursor:pointer;margin-top:1rem}
     .kbd{display:inline-block;border:1px solid #888;border-bottom-width:2px;border-radius:6px;padding:.2rem .45rem;margin:0 .2rem;background:#111;color:#eee}
   </style>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- 앱 테마 색상 -->
+  <meta name="theme-color" content="#0d47a1">
+
+  <!-- 서비스 워커 등록 -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
 </head>
 <body>
   <!-- 실패 시 카톡 사용자 안내 오버레이 -->
