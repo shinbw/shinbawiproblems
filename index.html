@@ -26,6 +26,24 @@
       navigator.serviceWorker.register("sw.js");
     }
   </script>
+  <!-- PWA 기본 -->
+<link rel="manifest" href="/shinbawiproblems/manifest.json">
+<meta name="theme-color" content="#0d47a1">
+
+<!-- iOS(아이폰)용 메타 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="신바위 문제">
+<!-- iOS 아이콘: 180 권장이나 192도 자동 스케일 → 준비된 192 사용 -->
+<link rel="apple-touch-icon" href="/shinbawiproblems/icons/icon-192.png">
+
+<!-- 서비스워커 등록 (경로 주의) -->
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/shinbawiproblems/sw.js");
+  }
+</script>
+
 </head>
 <body>
   <!-- 실패 시 카톡 사용자 안내 오버레이 -->
