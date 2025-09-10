@@ -6,17 +6,15 @@
   <title>신바위 문제</title>
 
   <!-- PWA 연결 -->
-  <link rel="manifest" href="/shinbawiproblems/manifest.json" />
-
-  <!-- 상단/시스템 UI 색상: 검정 -->
+  <link rel="manifest" href="/shinbawiproblems/manifest.json">
   <meta name="theme-color" content="#000000" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- 서비스워커 등록 -->
+  <!-- 서비스워커 등록 (버전쿼리 포함) -->
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/shinbawiproblems/sw.js").catch(()=>{});
+      navigator.serviceWorker.register("/shinbawiproblems/sw.js?v=3");
     }
   </script>
 
@@ -36,7 +34,7 @@
       display: grid;
       gap: 16px;
     }
-    /* 버튼 공통 (앵커, 버튼 동일 적용) */
+    /* 버튼 공통 */
     .btn {
       display: block;
       width: 100%;
@@ -53,8 +51,7 @@
       cursor: pointer;
     }
     .hint { color: #cbd5e1; font-size: 14px; text-align: center; }
-
-    /* ✅ 카톡 인앱 브라우저에서 button 기본 스타일 깨짐 방지 */
+    /* 카톡 인앱에서 버튼 깨짐 방지 */
     button.btn {
       all: unset;
       display: block;
@@ -84,28 +81,23 @@
     const DRIVE_URL   = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
     const LANDING_URL = "https://shinbw.github.io/shinbawiproblems/";
 
-    // 앱(PWA)으로 실행되면 → 바로 연구소 드라이브로 이동
+    // 앱(PWA) 실행 시 → 바로 드라이브로 이동
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       window.navigator.standalone;
-
     if (isStandalone) {
       location.replace(DRIVE_URL);
     }
   </script>
 
-  <!-- 일반 브라우저에서 보이는 첫 화면 -->
+  <!-- 일반 브라우저 첫 화면 -->
   <section class="wrap">
-    <!-- 위: 앱 설치 -->
     <button id="installBtn" class="btn" disabled style="cursor:not-allowed;">
       앱 설치
     </button>
-
-    <!-- 아래: 신바위 연구소 구글드라이브 -->
     <a class="btn" href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K">
       신바위 연구소 입장
     </a>
-
     <div id="installMsg" class="hint"></div>
   </section>
 
@@ -133,10 +125,7 @@
     });
 
     installBtn.addEventListener("click", async () => {
-      if (!deferredPrompt) {
-        installMsg.textContent = "아직 설치 준비 중입니다. 새로고침 후 다시 시도하세요.";
-        return;
-      }
+      if (!deferredPrompt) return;
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       installMsg.textContent = (outcome === "accepted") ? "설치를 진행합니다…" : "설치를 취소했습니다.";
@@ -146,11 +135,11 @@
     });
 
     window.addEventListener("appinstalled", () => {
-      installMsg.textContent = "설치 완료! 앱 실행 시 자동으로 연구소로 이동합니다.";
+      installMsg.textContent = "설치 완료! 앱 실행 시 곧바로 연구소로 이동합니다.";
     });
   </script>
 
-  <!-- 카톡 인앱 브라우저 감지 오버레이 -->
+  <!-- 카톡 인앱 브라우저 오버레이 -->
   <script>
   (function () {
     const isKakao = /KAKAOTALK/i.test(navigator.userAgent);
@@ -190,7 +179,6 @@
         원활한 사용을 위해 <b style="color:#38bdf8">${isAndroid ? "Chrome" : "Safari"}</b>에서 열어주세요.<br>
         <span style="font-size:14px;color:#94a3b8">${tip}</span>
       </p>
-
       <div style="display:grid; gap:14px;">
         ${isAndroid ? `
           <a href="${chromeIntent}"
@@ -211,7 +199,6 @@
           이 창에서 계속 (인앱)
         </a>
       </div>
-
       <p style="margin-top:20px;font-size:12px;color:#64748b;">
         설치(PWA) 후 앱 실행 시 곧바로 신바위 연구소로 이동합니다.
       </p>
