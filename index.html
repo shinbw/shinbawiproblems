@@ -5,9 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>신바위 문제</title>
 
-  <!-- PWA 연결 -->
+  <!-- PWA 연결 (하위 경로에 맞게 절대경로) -->
   <link rel="manifest" href="/shinbawiproblems/manifest.json" />
-  <meta name="theme-color" content="#0d47a1" />
+
+  <!-- 상단/시스템 UI 색상: 검정 -->
+  <meta name="theme-color" content="#000000" />
+
+  <!-- iOS PWA 상태바/전체화면 설정(상단 줄 색 검정) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <!-- 서비스워커 등록 -->
   <script>
@@ -15,51 +21,84 @@
       navigator.serviceWorker.register("/shinbawiproblems/sw.js").catch(()=>{});
     }
   </script>
+
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0; background: #000; color: #111;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Malgun Gothic, Arial, sans-serif;
+    }
+    .wrap {
+      max-width: 960px; margin: 40px auto; padding: 16px;
+      display: grid; grid-template-columns: 1fr; gap: 16px;
+    }
+    /* 버튼 공통: 흰 배경 + 검정 글씨 */
+    .btn {
+      display: block; text-align: center; padding: 18px 16px;
+      border-radius: 12px; text-decoration: none; font-weight: 800;
+      background: #fff; color: #000; border: 1px solid #e5e7eb;
+    }
+    .hint { color: #cbd5e1; font-size: 14px; text-align: center; }
+    @media (min-width: 700px) {
+      .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:center; }
+    }
+  </style>
 </head>
-<body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,Arial,sans-serif; background:#fafafa;">
+<body>
 
   <script>
-    // 앱 모드인지 확인 (설치된 PWA 실행 여부)
+    // ===== 설정 =====
+    const LANDING_URL = "https://shinbw.github.io/shinbawiproblems/";   // 우리 첫 화면(이 페이지)
+    const DRIVE_URL   = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K"; // 신바위 연구소
+
+    // 앱(설치된 PWA)로 실행 중인지?
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       window.navigator.standalone;
 
+    // 앱으로 실행되면: 즉시 외부 브라우저로 드라이브 열기 시도
     if (isStandalone) {
-      // 앱으로 실행되면 바로 신바위 연구소 구글드라이브로 이동
-      window.location.href = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+      // 대부분 환경에서 _blank는 외부 브라우저로 열립니다.
+      const w = window.open(DRIVE_URL, "_blank");
+      // 일부 환경에서 차단되면 설명 메시지로 유도(필요 시)
+      if (!w) {
+        // 클릭 유도 대체 (간단 메시지)
+        document.write('<div style="color:#fff;padding:24px;text-align:center">드라이브를 새 창으로 여는 중입니다. 차단되면 <a href="'+DRIVE_URL+'" style="color:#38bdf8">여기</a>를 눌러주세요.</div>');
+      } else {
+        // 현재 PWA 창은 비워 둡니다(필요 시 닫기 시도 가능)
+      }
     }
   </script>
 
-  <!-- 앱 설치 전이라면 첫 화면 -->
-  <section style="max-width:960px;margin:40px auto;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center">
-    <!-- 왼쪽: 신바위 연구소 구글드라이브 -->
-    <a href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K"
-       style="display:block;text-align:center;padding:18px 16px;border:1px solid #e5e7eb;border-radius:12px;text-decoration:none;font-weight:700;background:#fff;">
-      신바위 연구소 입장
-    </a>
+  <!-- 일반 브라우저에서 보이는 첫 화면 -->
+  <section class="wrap">
+    <div class="grid2">
+      <!-- 위: 앱 설치 버튼 -->
+      <button id="installBtn" class="btn" disabled style="cursor:not-allowed;">
+        앱 설치
+      </button>
 
-    <!-- 오른쪽: 앱 설치 버튼 -->
-    <button id="installBtn" disabled
-            style="padding:18px 16px;border:none;border-radius:12px;font-weight:800;background:#0d47a1;color:#fff;cursor:not-allowed">
-      앱 설치
-    </button>
-
-    <!-- 상태 메시지 -->
-    <div id="installMsg" style="grid-column:1 / -1;color:#64748b;font-size:14px"></div>
+      <!-- 아래: 신바위 연구소(구글드라이브)로 이동 -->
+      <a class="btn" href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K">
+        신바위 연구소 입장
+      </a>
+    </div>
+    <div id="installMsg" class="hint"></div>
   </section>
 
   <script>
-    const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
+    // 앱 설치 흐름
     const installBtn = document.getElementById("installBtn");
     const installMsg = document.getElementById("installMsg");
     let deferredPrompt = null;
 
+    const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
     if (isiOS && isSafari) {
       installBtn.disabled = true;
       installBtn.style.cursor = "not-allowed";
-      installMsg.innerHTML = "iPhone/Safari는 <b>공유 버튼(⬆️) → 홈 화면에 추가</b>로 설치하세요.";
+      installMsg.innerHTML = "iPhone/Safari는 <b>공유(⬆️) → 홈 화면에 추가</b>로 설치하세요.";
     }
 
     window.addEventListener("beforeinstallprompt", (e) => {
@@ -84,109 +123,96 @@
     });
 
     window.addEventListener("appinstalled", () => {
-      installMsg.textContent = "설치 완료! 바탕화면/앱 목록에서 실행하세요.";
-      installBtn.disabled = true;
-      installBtn.style.cursor = "not-allowed";
+      installMsg.textContent = "설치 완료! 바탕화면/앱 목록에서 실행 시 곧바로 연구소로 이동합니다.";
     });
   </script>
+
+  <!-- ✅ 카톡 인앱 감지 오버레이 (검정 테마, 닫기 버튼 제거, '오른쪽 하단 점 3개' 문구) -->
   <script>
-(function () {
-  const isKakao = /KAKAOTALK/i.test(navigator.userAgent);
-  if (!isKakao) return;
+  (function () {
+    const isKakao = /KAKAOTALK/i.test(navigator.userAgent);
+    if (!isKakao) return;
 
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  const isIOS     = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const targetUrl = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const isIOS     = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  const chromeIntent =
-    "intent://" + targetUrl.replace(/^https?:\/\//, "") +
-    "#Intent;scheme=https;package=com.android.chrome;" +
-    "S.browser_fallback_url=" +
-    encodeURIComponent("https://play.google.com/store/apps/details?id=com.android.chrome") +
-    ";end";
+    // 안드로이드: 크롬으로 "우리 랜딩" 열도록 유도 (카톡 완전히 나가기)
+    const chromeIntent =
+      "intent://" + LANDING_URL.replace(/^https?:\/\//, "") +
+      "#Intent;scheme=https;package=com.android.chrome;" +
+      "S.browser_fallback_url=" +
+      encodeURIComponent("https://play.google.com/store/apps/details?id=com.android.chrome") +
+      ";end";
 
-  // 전체 오버레이
-  const $wrap = document.createElement("div");
-  $wrap.style.cssText = `
-    position: fixed; inset: 0; z-index: 9999;
-    background: #000; display:flex; align-items:center; justify-content:center;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Malgun Gothic, Arial, sans-serif;
-  `;
+    const $wrap = document.createElement("div");
+    $wrap.style.cssText = `
+      position: fixed; inset: 0; z-index: 9999;
+      background: #000; display:flex; align-items:center; justify-content:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Malgun Gothic, Arial, sans-serif;
+    `;
 
-  // 안내 박스
-  const $sheet = document.createElement("div");
-  $sheet.style.cssText = `
-    width:min(560px, 92vw); background:#111; color:#f1f5f9;
-    border-radius:20px; padding:28px; box-shadow:0 6px 32px rgba(0,0,0,.7);
-    text-align:center;
-  `;
+    const $sheet = document.createElement("div");
+    $sheet.style.cssText = `
+      width:min(560px, 92vw); background:#111; color:#f1f5f9;
+      border-radius:20px; padding:28px; box-shadow:0 6px 32px rgba(0,0,0,.7);
+      text-align:center;
+    `;
 
-  const tip = isAndroid
-    ? "우측 상단 점 3개 → <b>다른 브라우저로 열기</b> → <b>Chrome</b>"
-    : "공유 버튼(⬆️) → <b>Safari에서 열기</b> 또는 <b>홈 화면에 추가</b>";
+    const tip = isAndroid
+      ? "오른쪽 <b>하단</b> 점 3개 → <b>다른 브라우저로 열기</b> → <b>Chrome</b>"
+      : "공유(⬆️) → <b>Safari에서 열기</b> 또는 <b>홈 화면에 추가</b>";
 
-  $sheet.innerHTML = `
-    <h2 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#fff;">카카오톡 인앱 브라우저 감지됨</h2>
-    <p style="margin:0 0 24px;line-height:1.6;color:#cbd5e1;font-size:15px;">
-      원활한 사용을 위해 <b style="color:#38bdf8">${isAndroid ? "Chrome" : "Safari"}</b>에서 열어주세요.<br>
-      <span style="font-size:14px;color:#94a3b8">${tip}</span>
-    </p>
+    $sheet.innerHTML = `
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#fff;">카카오톡 인앱 브라우저 감지됨</h2>
+      <p style="margin:0 0 24px;line-height:1.6;color:#cbd5e1;font-size:15px;">
+        원활한 사용을 위해 <b style="color:#38bdf8">${isAndroid ? "Chrome" : "Safari"}</b>에서 열어주세요.<br>
+        <span style="font-size:14px;color:#94a3b8">${tip}</span>
+      </p>
 
-    <div style="display:grid; gap:14px;">
-      ${isAndroid ? `
-        <a href="${chromeIntent}"
-           style="display:block;padding:14px 0;border-radius:12px;
-                  background:#0d47a1;color:#fff;font-weight:700;text-decoration:none;">
-          🚀 Chrome으로 열기
+      <div style="display:grid; gap:14px;">
+        ${isAndroid ? `
+          <a href="${chromeIntent}"
+             style="display:block;padding:14px 0;border-radius:12px;
+                    background:#fff;color:#000;font-weight:800;text-decoration:none;">
+            Chrome으로 열기
+          </a>
+        ` : `
+          <button id="copyLinkBtn"
+                  style="padding:14px 0;border-radius:12px;border:1px solid #333;
+                         background:#fff;color:#000;font-weight:800;cursor:pointer;">
+            링크 복사 → Safari에서 붙여넣기
+          </button>
+        `}
+        <a href="${LANDING_URL}"
+           style="display:block;padding:12px 0;border-radius:12px;
+                  border:1px solid #333;background:#fff;color:#000;font-weight:800;text-decoration:none;">
+          이 창에서 계속 (인앱)
         </a>
-      ` : `
-        <button id="copyLinkBtn"
-                style="padding:14px 0;border-radius:12px;border:1px solid #333;
-                       background:#222;color:#f1f5f9;font-weight:700;cursor:pointer;">
-          📋 링크 복사 → Safari 붙여넣기
-        </button>
-      `}
-      <a href="${targetUrl}"
-         style="display:block;padding:12px 0;border-radius:12px;
-                border:1px solid #333;background:#1e293b;color:#e2e8f0;font-weight:600;text-decoration:none;">
-        그냥 이 창에서 열기 (인앱)
-      </a>
-      <button id="closeKakaoOverlay"
-              style="padding:10px 0;border-radius:12px;border:none;
-                     background:#334155;color:#f8fafc;font-weight:600;cursor:pointer;">
-        닫기
-      </button>
-    </div>
+      </div>
 
-    <p style="margin-top:20px;font-size:12px;color:#64748b;">
-      설치(PWA) 후에는 첫 화면 없이 자동으로 신바위 연구소로 열립니다.
-    </p>
-  `;
+      <p style="margin-top:20px;font-size:12px;color:#64748b;">
+        설치(PWA) 후에는 앱에서 곧바로 신바위 연구소로 열립니다.
+      </p>
+    `;
 
-  $wrap.appendChild($sheet);
-  document.body.appendChild($wrap);
+    $wrap.appendChild($sheet);
+    document.body.appendChild($wrap);
 
-  // iOS: 링크 복사
-  if (isIOS) {
-    const copyBtn = $sheet.querySelector("#copyLinkBtn");
-    copyBtn?.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(targetUrl);
-        copyBtn.textContent = "✅ 복사됨! Safari에 붙여넣으세요";
-        copyBtn.style.background = "#064e3b";
-        copyBtn.style.color = "#fff";
-      } catch {
-        alert("복사 실패: 주소창을 길게 눌러 직접 복사해주세요.");
-      }
-    });
-  }
-
-  // 닫기 버튼
-  $sheet.querySelector("#closeKakaoOverlay")?.addEventListener("click", () => {
-    document.body.removeChild($wrap);
-  });
-})();
-</script>
+    // iOS: 랜딩 링크 복사
+    if (isIOS) {
+      const copyBtn = $sheet.querySelector("#copyLinkBtn");
+      copyBtn?.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(LANDING_URL);
+          copyBtn.textContent = "✅ 복사됨! Safari에 붙여넣으세요";
+          copyBtn.style.background = "#e5e7eb";
+        } catch {
+          alert("복사 실패: 주소창을 길게 눌러 직접 복사해주세요.");
+        }
+      });
+    }
+  })();
+  </script>
 
 </body>
 </html>
