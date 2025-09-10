@@ -45,6 +45,27 @@
   </style>
 </head>
 <body>
+  <body style="background:#000;">
+  <script>
+    // 앱(설치된 PWA)로 실행 중인지 확인
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone; // iOS PWA
+
+    // 앱이면 즉시 외부 브라우저(또는 OS 기본 핸들러)로 연구소 링크 이동
+    if (isStandalone) {
+      const DRIVE_URL = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+
+      // 히스토리에 남기지 않고 즉시 전환 (뒤로가기도 차단)
+      location.replace(DRIVE_URL);
+
+      // 혹시 어떤 환경에서 replace가 막히면 약한 보조 시도
+      // setTimeout(() => { location.href = DRIVE_URL; }, 150);
+    }
+  </script>
+
+  <!-- ↓↓↓ 여기부터가 '브라우저에서 열 때' 보이는 랜딩 UI (앱일 땐 위에서 이미 떠남) ↓↓↓ -->
+
 
   <script>
     // ===== 설정 =====
