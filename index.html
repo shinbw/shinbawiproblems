@@ -1,205 +1,85 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>신바위 문제</title>
 
-  <!-- PWA 앱 설정 연결 -->
-  <link rel="manifest" href="/shinbawiproblems/manifest.json">
-  <meta name="theme-color" content="#0d47a1">
+  <!-- PWA 연결 (GitHub Pages 하위 경로에 맞춰 절대경로 사용) -->
+  <link rel="manifest" href="/shinbawiproblems/manifest.json" />
+  <meta name="theme-color" content="#0d47a1" />
 
   <!-- 서비스워커 등록 -->
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/shinbawiproblems/sw.js");
+      navigator.serviceWorker.register("/shinbawiproblems/sw.js").catch(()=>{});
     }
   </script>
 
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>구글에서 링크 실행</title>
-
-  <style>
-    :root{--bg:#000;--fg:#fff;--muted:#ccc;--btn:#fff;--btnfg:#000}
-    html,body{height:100%;margin:0}
-    body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;display:grid;place-items:center}
-    .wrap{display:none;max-width:680px;padding:1.2rem;text-align:center}
-    .wrap.show{display:block}
-    h1{font-size:1.2rem;margin:0 0 .75rem}
-    p{margin:.5rem 0;color:var(--muted);line-height:1.6}
-    .btn{background:var(--btn);color:var(--btnfg);border:0;border-radius:12px;padding:.9rem 1.2rem;font-weight:700;text-decoration:none;cursor:pointer;margin-top:1rem}
-    .kbd{display:inline-block;border:1px solid #888;border-bottom-width:2px;border-radius:6px;padding:.2rem .45rem;margin:0 .2rem;background:#111;color:#eee}
-  </style>
-
-  <!-- ✅ PWA manifest -->
-  <link rel="manifest" href="/shinbawiproblems/manifest.json">
-  <meta name="theme-color" content="#0d47a1">
-
-  <!-- ✅ iOS(아이폰)용 메타 -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="신바위 문제">
-  <link rel="apple-touch-icon" href="/shinbawiproblems/icons/icon-192.png">
-
-  <!-- ✅ 서비스 워커 등록 -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/shinbawiproblems/sw.js");
-    }
-  </script>
+  <!-- ★ 자동 이동(리다이렉트) 금지: meta refresh, window.location, setTimeout 이동 코드 일절 없음 -->
 </head>
-<body>
+<body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,Arial,sans-serif; background:#fafafa;">
   <section style="max-width:960px;margin:40px auto;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center">
-  <!-- 왼쪽: 구글드라이브 입장 -->
-  <a href="https://drive.google.com/" 
-     style="display:block;text-align:center;padding:18px 16px;border:1px solid #e5e7eb;border-radius:12px;text-decoration:none;font-weight:700;background:#fff;">
-    구글드라이브 입장
-  </a>
+    <!-- 왼쪽: 구글드라이브 입장 -->
+    <a href="https://drive.google.com/"
+       style="display:block;text-align:center;padding:18px 16px;border:1px solid #e5e7eb;border-radius:12px;text-decoration:none;font-weight:700;background:#fff;">
+      구글드라이브 입장
+    </a>
 
-  <!-- 오른쪽: 앱 설치 -->
-  <button id="installBtn" disabled
-          style="padding:18px 16px;border:none;border-radius:12px;font-weight:800;background:#0d47a1;color:#fff;cursor:not-allowed">
-    앱 설치
-  </button>
+    <!-- 오른쪽: 앱 설치 버튼 -->
+    <button id="installBtn" disabled
+            style="padding:18px 16px;border:none;border-radius:12px;font-weight:800;background:#0d47a1;color:#fff;cursor:not-allowed">
+      앱 설치
+    </button>
 
-  <!-- 상태 메시지 -->
-  <div id="installMsg" style="grid-column:1 / -1;color:#64748b;font-size:14px"></div>
-</section>
-
-<script>
-  // GitHub Pages 하위 경로에 맞춰 서비스워커/매니페스트 등록 (이미 넣었어도 중복 문제 없음)
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/shinbawiproblems/sw.js").catch(()=>{});
-  }
-
-  // iOS는 beforeinstallprompt가 없으니 안내 문구 노출
-  const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  const installBtn = document.getElementById("installBtn");
-  const installMsg = document.getElementById("installMsg");
-  let deferredPrompt = null;
-
-  if (isiOS && isSafari) {
-    installBtn.disabled = true;
-    installBtn.style.cursor = "not-allowed";
-    installMsg.innerHTML = "iPhone/Safari는 앱 설치 버튼이 보이지 않습니다. 공유 버튼(⬆️) → <b>홈 화면에 추가</b>를 눌러 설치하세요.";
-  }
-
-  // 크롬/엣지: 설치 가능 신호 받기
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();              // 자동 배너 막고
-    deferredPrompt = e;              // 이벤트 저장
-    installBtn.disabled = false;     // 버튼 활성화
-    installBtn.style.cursor = "pointer";
-    installMsg.textContent = "앱 설치가 가능합니다. 버튼을 눌러 설치하세요.";
-  });
-
-  // 버튼 눌렀을 때 설치 팝업 띄우기
-  installBtn.addEventListener("click", async () => {
-    if (!deferredPrompt) {
-      // 아직 설치 가능 상태가 아님 (manifest/scope/sw 경로 확인 필요)
-      installMsg.innerHTML = "설치 준비 중입니다. 새로고침(Ctrl+Shift+R) 후 다시 시도하거나 캐시를 지워보세요.";
-      return;
-    }
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      installMsg.textContent = "설치를 진행합니다…";
-    } else {
-      installMsg.textContent = "설치를 취소했습니다.";
-    }
-    deferredPrompt = null; // 한 번 사용 후 해제
-  });
-
-  // 설치 완료 감지
-  window.addEventListener("appinstalled", () => {
-    installMsg.textContent = "설치가 완료되었습니다. 홈 화면 또는 앱 목록에서 실행하세요.";
-    installBtn.disabled = true;
-    installBtn.style.cursor = "not-allowed";
-  });
-</script>
-
-  <!-- 실패 시 카톡 사용자 안내 오버레이 -->
-  <div id="fallback" class="wrap">
-    <h1>카카오톡 인앱 브라우저에서 열렸습니다</h1>
-    <p><strong>오른쪽 아래 <span class="kbd">⋯</span> → “다른 브라우저에서 열기”</strong>를 눌러주세요.</p>
-    <button id="copyBtn" class="btn">링크 복사 → 다른 브라우저에서 붙여넣어 실행</button>
-  </div>
+    <!-- 상태 메시지 -->
+    <div id="installMsg" style="grid-column:1 / -1;color:#64748b;font-size:14px"></div>
+  </section>
 
   <script>
-    // === 설정: 대상 Google Drive 폴더 ID ===
-    const FOLDER_ID = "1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+    // iOS Safari는 beforeinstallprompt 미지원 → 안내만 표시
+    const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-    // 표준 웹 URL (백업용)
-    const DRIVE_WEB_URL = `https://drive.google.com/drive/folders/${FOLDER_ID}?usp=sharing`;
+    const installBtn = document.getElementById("installBtn");
+    const installMsg = document.getElementById("installMsg");
+    let deferredPrompt = null;
 
-    // **안드로이드 앱/크롬 호출**
-    const ANDROID_INTENT_DRIVE =
-      `intent://drive.google.com/drive/folders/${FOLDER_ID}` +
-      `#Intent;scheme=https;package=com.google.android.apps.docs;end`;
+    if (isiOS && isSafari) {
+      installBtn.disabled = true;
+      installBtn.style.cursor = "not-allowed";
+      installMsg.innerHTML = "iPhone/Safari는 <b>공유 버튼(⬆️) → 홈 화면에 추가</b>로 설치합니다.";
+    }
 
-    const ANDROID_INTENT_CHROME =
-      `intent://drive.google.com/drive/folders/${FOLDER_ID}` +
-      `#Intent;scheme=https;package=com.android.chrome;end`;
-
-    // **iOS 앱/크롬 스킴** (설치 필요)
-    // 구글 드라이브 앱 스킴 (폴더 열기)
-    const IOS_DRIVE_SCHEME = `googledrive://folder/${FOLDER_ID}`;
-    // iOS 크롬 스킴(https→googlechromes)
-    const IOS_CHROME_SCHEME =
-      `googlechromes://drive.google.com/drive/folders/${FOLDER_ID}`;
-
-    // 환경 감지
-    const ua = (navigator.userAgent || navigator.vendor || window.opera || "").toLowerCase();
-    const isKakao = ua.includes("kakaotalk");
-    const isAndroid = ua.includes("android");
-    const isIOS = ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod");
-
-    // 오버레이 엘리먼트
-    const $fallback = document.getElementById("fallback");
-    const $copyBtn = document.getElementById("copyBtn");
-
-    // 복사 버튼
-    $copyBtn.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(DRIVE_WEB_URL);
-        $copyBtn.textContent = "복사됨! 브라우저에 붙여넣어 실행하세요.";
-      } catch {
-        alert("복사에 실패했습니다. 아래 주소를 수동으로 복사해주세요:\n" + DRIVE_WEB_URL);
-      }
+    // 설치 가능 신호 오면 버튼 활성화
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.disabled = false;
+      installBtn.style.cursor = "pointer";
+      installMsg.textContent = "앱 설치가 가능합니다. 버튼을 눌러 설치하세요.";
     });
 
-    // 외부 앱/크롬 실행 시도 실패 감지용
-    let switched = false;
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) switched = true;
-    }, { once: true });
-
-    const showTip = () => $fallback.classList.add("show");
-
-    // 공통 실행 로직
-    function openViaGoogle() {
-      if (isAndroid) {
-        // 1) 구글 드라이브 앱 → 2) 크롬 → 3) 실패 시 안내
-        location.href = ANDROID_INTENT_DRIVE;
-        setTimeout(() => { if (!switched) location.href = ANDROID_INTENT_CHROME; }, 700);
-        setTimeout(() => { if (!switched) showTip(); }, 1400);
-      } else if (isIOS) {
-        // 1) 드라이브 앱 스킴 → 2) 크롬 스킴 → 3) 실패 시 안내
-        location.href = IOS_DRIVE_SCHEME;
-        setTimeout(() => { if (!switched) location.href = IOS_CHROME_SCHEME; }, 700);
-        setTimeout(() => { if (!switched) showTip(); }, 1400);
-      } else {
-        // 데스크톱 등: 웹으로
-        location.replace(DRIVE_WEB_URL);
+    // 설치 버튼 클릭 → 설치 팝업
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) {
+        installMsg.textContent = "아직 설치 준비 중입니다. 새로고침(Ctrl+Shift+R) 후 다시 시도하세요.";
+        return;
       }
-    }
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      installMsg.textContent = (outcome === "accepted") ? "설치를 진행합니다…" : "설치를 취소했습니다.";
+      deferredPrompt = null;
+      installBtn.disabled = true;
+      installBtn.style.cursor = "not-allowed";
+    });
 
-    // 카톡 여부와 무관하게 "구글에서 실행"을 먼저 시도
-    openViaGoogle();
-
-    // 추가: 카톡 인앱이고, 위 시도가 막혔다면 안내 오버레이가 뜹니다.
-    // (iOS는 사파리 강제 불가 → 사용자가 '다른 브라우저에서 열기' 선택 필요)
+    // 설치 완료 이벤트
+    window.addEventListener("appinstalled", () => {
+      installMsg.textContent = "설치 완료! 바탕화면/앱 목록에서 실행하세요.";
+      installBtn.disabled = true;
+      installBtn.style.cursor = "not-allowed";
+    });
   </script>
 </body>
 </html>
