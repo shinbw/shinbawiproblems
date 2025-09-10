@@ -1,6 +1,5 @@
-const CACHE_NAME = "shinbawi-cache-v1";
+const CACHE_NAME = "shinbawi-cache-v2"; // v1 → v2
 
-// 설치: 기본 파일 캐싱 + 즉시 활성화
 self.addEventListener("install", (e) => {
   self.skipWaiting();
   e.waitUntil(
@@ -14,7 +13,6 @@ self.addEventListener("install", (e) => {
   );
 });
 
-// 활성화: 오래된 캐시 삭제 + 즉시 컨트롤
 self.addEventListener("activate", (e) => {
   clients.claim();
   e.waitUntil(
@@ -24,7 +22,6 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-// 네트워크 우선, 실패 시 캐시
 self.addEventListener("fetch", (e) => {
   e.respondWith(
     fetch(e.request)
