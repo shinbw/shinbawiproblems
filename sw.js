@@ -1,12 +1,11 @@
-// 캐시 버전 올리면 자동으로 최신 적용 유도됨
-const CACHE_NAME = "shinbawi-cache-v3";
+// sw.js?v=4 로 등록할 것
+const CACHE_NAME = "shinbawi-cache-v4";
 
-// 즉시 교체
+// 즉시 새 SW 활성화
 self.addEventListener("install", (e) => {
   self.skipWaiting();
 });
 
-// 오래된 캐시 정리 + 즉시 컨트롤
 self.addEventListener("activate", (e) => {
   clients.claim();
   e.waitUntil(
