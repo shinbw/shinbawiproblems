@@ -1,6 +1,20 @@
 <!doctype html>
 <html lang="ko">
 <head>
+  <meta charset="UTF-8">
+  <title>신바위 문제</title>
+
+  <!-- PWA 앱 설정 연결 -->
+  <link rel="manifest" href="/shinbawiproblems/manifest.json">
+  <meta name="theme-color" content="#0d47a1">
+
+  <!-- 서비스워커 등록 -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/shinbawiproblems/sw.js");
+    }
+  </script>
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>구글에서 링크 실행</title>
