@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>신바위 문제</title>
 
-  <!-- PWA 연결 (하위 경로에 맞게 절대경로) -->
+  <!-- PWA 연결 -->
   <link rel="manifest" href="/shinbawiproblems/manifest.json" />
 
   <!-- 상단/시스템 UI 색상: 검정 -->
   <meta name="theme-color" content="#000000" />
-
-  <!-- iOS PWA 상태바/전체화면 설정(상단 줄 색 검정) -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -22,93 +20,97 @@
     }
   </script>
 
+  <!-- 공통 스타일 -->
   <style>
-    :root { color-scheme: dark; }
     body {
-      margin: 0; background: #000; color: #111;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Malgun Gothic, Arial, sans-serif;
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto,
+                   Apple SD Gothic Neo, Malgun Gothic, Arial, sans-serif;
     }
     .wrap {
-      max-width: 960px; margin: 40px auto; padding: 16px;
-      display: grid; grid-template-columns: 1fr; gap: 16px;
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 16px;
+      display: grid;
+      gap: 16px;
     }
-    /* 버튼 공통: 흰 배경 + 검정 글씨 */
+    /* 버튼 공통 (앵커, 버튼 동일 적용) */
     .btn {
-      display: block; text-align: center; padding: 18px 16px;
-      border-radius: 12px; text-decoration: none; font-weight: 800;
-      background: #fff; color: #000; border: 1px solid #e5e7eb;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+      padding: 18px 16px;
+      border-radius: 12px;
+      background: #fff;
+      color: #000;
+      border: 1px solid #e5e7eb;
+      font-weight: 800;
+      line-height: 1.2;
+      text-decoration: none;
+      cursor: pointer;
     }
     .hint { color: #cbd5e1; font-size: 14px; text-align: center; }
-    @media (min-width: 700px) {
-      .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:center; }
+
+    /* ✅ 카톡 인앱 브라우저에서 button 기본 스타일 깨짐 방지 */
+    button.btn {
+      all: unset;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 18px 16px;
+      border-radius: 12px;
+      background: #fff;
+      color: #000;
+      border: 1px solid #e5e7eb;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.2;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    button.btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
     }
   </style>
 </head>
 <body>
-  <body style="background:#000;">
-  <script>
-    // 앱(설치된 PWA)로 실행 중인지 확인
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      window.navigator.standalone; // iOS PWA
-
-    // 앱이면 즉시 외부 브라우저(또는 OS 기본 핸들러)로 연구소 링크 이동
-    if (isStandalone) {
-      const DRIVE_URL = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
-
-      // 히스토리에 남기지 않고 즉시 전환 (뒤로가기도 차단)
-      location.replace(DRIVE_URL);
-
-      // 혹시 어떤 환경에서 replace가 막히면 약한 보조 시도
-      // setTimeout(() => { location.href = DRIVE_URL; }, 150);
-    }
-  </script>
-
-  <!-- ↓↓↓ 여기부터가 '브라우저에서 열 때' 보이는 랜딩 UI (앱일 땐 위에서 이미 떠남) ↓↓↓ -->
-
 
   <script>
-    // ===== 설정 =====
-    const LANDING_URL = "https://shinbw.github.io/shinbawiproblems/";   // 우리 첫 화면(이 페이지)
-    const DRIVE_URL   = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K"; // 신바위 연구소
+    const DRIVE_URL   = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+    const LANDING_URL = "https://shinbw.github.io/shinbawiproblems/";
 
-    // 앱(설치된 PWA)로 실행 중인지?
+    // 앱(PWA)으로 실행되면 → 바로 연구소 드라이브로 이동
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       window.navigator.standalone;
 
-    // 앱으로 실행되면: 즉시 외부 브라우저로 드라이브 열기 시도
     if (isStandalone) {
-      // 대부분 환경에서 _blank는 외부 브라우저로 열립니다.
-      const w = window.open(DRIVE_URL, "_blank");
-      // 일부 환경에서 차단되면 설명 메시지로 유도(필요 시)
-      if (!w) {
-        // 클릭 유도 대체 (간단 메시지)
-        document.write('<div style="color:#fff;padding:24px;text-align:center">드라이브를 새 창으로 여는 중입니다. 차단되면 <a href="'+DRIVE_URL+'" style="color:#38bdf8">여기</a>를 눌러주세요.</div>');
-      } else {
-        // 현재 PWA 창은 비워 둡니다(필요 시 닫기 시도 가능)
-      }
+      location.replace(DRIVE_URL);
     }
   </script>
 
   <!-- 일반 브라우저에서 보이는 첫 화면 -->
   <section class="wrap">
-    <div class="grid2">
-      <!-- 위: 앱 설치 버튼 -->
-      <button id="installBtn" class="btn" disabled style="cursor:not-allowed;">
-        앱 설치
-      </button>
+    <!-- 위: 앱 설치 -->
+    <button id="installBtn" class="btn" disabled style="cursor:not-allowed;">
+      앱 설치
+    </button>
 
-      <!-- 아래: 신바위 연구소(구글드라이브)로 이동 -->
-      <a class="btn" href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K">
-        신바위 연구소 입장
-      </a>
-    </div>
+    <!-- 아래: 신바위 연구소 구글드라이브 -->
+    <a class="btn" href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K">
+      신바위 연구소 입장
+    </a>
+
     <div id="installMsg" class="hint"></div>
   </section>
 
   <script>
-    // 앱 설치 흐름
+    // 앱 설치 로직
     const installBtn = document.getElementById("installBtn");
     const installMsg = document.getElementById("installMsg");
     let deferredPrompt = null;
@@ -132,7 +134,7 @@
 
     installBtn.addEventListener("click", async () => {
       if (!deferredPrompt) {
-        installMsg.textContent = "아직 설치 준비 중입니다. 새로고침(Ctrl+Shift+R) 후 다시 시도하세요.";
+        installMsg.textContent = "아직 설치 준비 중입니다. 새로고침 후 다시 시도하세요.";
         return;
       }
       deferredPrompt.prompt();
@@ -144,11 +146,11 @@
     });
 
     window.addEventListener("appinstalled", () => {
-      installMsg.textContent = "설치 완료! 바탕화면/앱 목록에서 실행 시 곧바로 연구소로 이동합니다.";
+      installMsg.textContent = "설치 완료! 앱 실행 시 자동으로 연구소로 이동합니다.";
     });
   </script>
 
-  <!-- ✅ 카톡 인앱 감지 오버레이 (검정 테마, 닫기 버튼 제거, '오른쪽 하단 점 3개' 문구) -->
+  <!-- 카톡 인앱 브라우저 감지 오버레이 -->
   <script>
   (function () {
     const isKakao = /KAKAOTALK/i.test(navigator.userAgent);
@@ -157,7 +159,6 @@
     const isAndroid = /Android/i.test(navigator.userAgent);
     const isIOS     = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // 안드로이드: 크롬으로 "우리 랜딩" 열도록 유도 (카톡 완전히 나가기)
     const chromeIntent =
       "intent://" + LANDING_URL.replace(/^https?:\/\//, "") +
       "#Intent;scheme=https;package=com.android.chrome;" +
@@ -201,7 +202,7 @@
           <button id="copyLinkBtn"
                   style="padding:14px 0;border-radius:12px;border:1px solid #333;
                          background:#fff;color:#000;font-weight:800;cursor:pointer;">
-            링크 복사 → Safari에서 붙여넣기
+            링크 복사 → Safari 붙여넣기
           </button>
         `}
         <a href="${LANDING_URL}"
@@ -212,14 +213,13 @@
       </div>
 
       <p style="margin-top:20px;font-size:12px;color:#64748b;">
-        설치(PWA) 후에는 앱에서 곧바로 신바위 연구소로 열립니다.
+        설치(PWA) 후 앱 실행 시 곧바로 신바위 연구소로 이동합니다.
       </p>
     `;
 
     $wrap.appendChild($sheet);
     document.body.appendChild($wrap);
 
-    // iOS: 랜딩 링크 복사
     if (isIOS) {
       const copyBtn = $sheet.querySelector("#copyLinkBtn");
       copyBtn?.addEventListener("click", async () => {
