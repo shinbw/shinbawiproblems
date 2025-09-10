@@ -1,8 +1,8 @@
 {
   "name": "신바위 문제",
   "short_name": "신바위 문제",
-  "id": "/shinbawiproblems/?v=3",
-  "start_url": "/shinbawiproblems/?v=3",
+  "id": "/shinbawiproblems/?app=v4",
+  "start_url": "/shinbawiproblems/?start=v4",
   "scope": "/shinbawiproblems/",
   "display": "standalone",
   "display_override": ["standalone"],
