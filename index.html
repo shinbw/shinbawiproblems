@@ -89,5 +89,104 @@
       installBtn.style.cursor = "not-allowed";
     });
   </script>
+  <script>
+(function () {
+  const isKakao = /KAKAOTALK/i.test(navigator.userAgent);
+  if (!isKakao) return;
+
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isIOS     = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const targetUrl = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+
+  const chromeIntent =
+    "intent://" + targetUrl.replace(/^https?:\/\//, "") +
+    "#Intent;scheme=https;package=com.android.chrome;" +
+    "S.browser_fallback_url=" +
+    encodeURIComponent("https://play.google.com/store/apps/details?id=com.android.chrome") +
+    ";end";
+
+  // 전체 오버레이
+  const $wrap = document.createElement("div");
+  $wrap.style.cssText = `
+    position: fixed; inset: 0; z-index: 9999;
+    background: #000; display:flex; align-items:center; justify-content:center;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Malgun Gothic, Arial, sans-serif;
+  `;
+
+  // 안내 박스
+  const $sheet = document.createElement("div");
+  $sheet.style.cssText = `
+    width:min(560px, 92vw); background:#111; color:#f1f5f9;
+    border-radius:20px; padding:28px; box-shadow:0 6px 32px rgba(0,0,0,.7);
+    text-align:center;
+  `;
+
+  const tip = isAndroid
+    ? "우측 상단 점 3개 → <b>다른 브라우저로 열기</b> → <b>Chrome</b>"
+    : "공유 버튼(⬆️) → <b>Safari에서 열기</b> 또는 <b>홈 화면에 추가</b>";
+
+  $sheet.innerHTML = `
+    <h2 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#fff;">카카오톡 인앱 브라우저 감지됨</h2>
+    <p style="margin:0 0 24px;line-height:1.6;color:#cbd5e1;font-size:15px;">
+      원활한 사용을 위해 <b style="color:#38bdf8">${isAndroid ? "Chrome" : "Safari"}</b>에서 열어주세요.<br>
+      <span style="font-size:14px;color:#94a3b8">${tip}</span>
+    </p>
+
+    <div style="display:grid; gap:14px;">
+      ${isAndroid ? `
+        <a href="${chromeIntent}"
+           style="display:block;padding:14px 0;border-radius:12px;
+                  background:#0d47a1;color:#fff;font-weight:700;text-decoration:none;">
+          🚀 Chrome으로 열기
+        </a>
+      ` : `
+        <button id="copyLinkBtn"
+                style="padding:14px 0;border-radius:12px;border:1px solid #333;
+                       background:#222;color:#f1f5f9;font-weight:700;cursor:pointer;">
+          📋 링크 복사 → Safari 붙여넣기
+        </button>
+      `}
+      <a href="${targetUrl}"
+         style="display:block;padding:12px 0;border-radius:12px;
+                border:1px solid #333;background:#1e293b;color:#e2e8f0;font-weight:600;text-decoration:none;">
+        그냥 이 창에서 열기 (인앱)
+      </a>
+      <button id="closeKakaoOverlay"
+              style="padding:10px 0;border-radius:12px;border:none;
+                     background:#334155;color:#f8fafc;font-weight:600;cursor:pointer;">
+        닫기
+      </button>
+    </div>
+
+    <p style="margin-top:20px;font-size:12px;color:#64748b;">
+      설치(PWA) 후에는 첫 화면 없이 자동으로 신바위 연구소로 열립니다.
+    </p>
+  `;
+
+  $wrap.appendChild($sheet);
+  document.body.appendChild($wrap);
+
+  // iOS: 링크 복사
+  if (isIOS) {
+    const copyBtn = $sheet.querySelector("#copyLinkBtn");
+    copyBtn?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(targetUrl);
+        copyBtn.textContent = "✅ 복사됨! Safari에 붙여넣으세요";
+        copyBtn.style.background = "#064e3b";
+        copyBtn.style.color = "#fff";
+      } catch {
+        alert("복사 실패: 주소창을 길게 눌러 직접 복사해주세요.");
+      }
+    });
+  }
+
+  // 닫기 버튼
+  $sheet.querySelector("#closeKakaoOverlay")?.addEventListener("click", () => {
+    document.body.removeChild($wrap);
+  });
+})();
+</script>
+
 </body>
 </html>
