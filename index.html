@@ -5,32 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>신바위 문제</title>
 
-  <!-- head 안에 이것들로 교체 -->
+  <!-- PWA manifest 연결 (v5) -->
   <link rel="manifest" href="/shinbawiproblems/manifest.json?v=5">
   <meta name="theme-color" content="#000000" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+  <!-- (선택) iOS 홈화면 아이콘 품질 보장 -->
+  <link rel="apple-touch-icon" href="/shinbawiproblems/icons/icon-192.png">
+
+  <!-- 서비스워커 등록 (v5) + reset 모드 -->
   <script>
     if ("serviceWorker" in navigator) {
-      // ✅ sw도 강제로 새 파일로 인식시키기
       navigator.serviceWorker.register("/shinbawiproblems/sw.js?v=5");
     }
-
-    // (선택) reset 링크로 완전 초기화: /shinbawiproblems/?reset=1 로 접속 시 SW/캐시 제거
+    // /shinbawiproblems/?reset=1 → SW/캐시 초기화
     if (location.search.includes("reset=1") && "serviceWorker" in navigator) {
       (async () => {
         const regs = await navigator.serviceWorker.getRegistrations();
         for (const r of regs) { try { await r.unregister(); } catch(e){} }
         const keys = await caches.keys();
         for (const k of keys) { if (k.startsWith("shinbawi-cache-")) { try { await caches.delete(k); } catch(e){} } }
-        // 초기화 후 새로고침
         location.replace(location.origin + "/shinbawiproblems/");
       })();
     }
   </script>
 
-  <!-- 공통 스타일 -->
+  <!-- 스타일 -->
   <style>
     :root { color-scheme: dark; }
     body {
@@ -65,7 +66,7 @@
     }
     .hint { color: #cbd5e1; font-size: 14px; text-align: center; }
 
-    /* ✅ 카톡 인앱에서 button 기본 스타일 깨짐 방지 */
+    /* 카톡 인앱 등에서 button 기본 스타일 깨짐 방지 */
     button.btn {
       all: unset;
       display: block;
@@ -83,46 +84,33 @@
       appearance: none;
       cursor: pointer;
     }
-    button.btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.7;
-    }
   </style>
 </head>
 <body>
 
   <script>
-    // 설정
     const DRIVE_URL   = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
     const LANDING_URL = "https://shinbw.github.io/shinbawiproblems/";
 
-    // 앱(PWA)으로 실행되면 → 선택 화면 없이 바로 연구소 드라이브로 이동
+    // PWA(설치된 앱)로 실행되면 → 바로 연구소 드라이브로 이동
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       window.navigator.standalone; // iOS PWA
     if (isStandalone) {
-      // 현재 앱 창을 외부로 넘김(뒤로가기 기록 남기지 않음)
       location.replace(DRIVE_URL);
     }
   </script>
 
-  <!-- 일반 브라우저에서 보이는 첫 화면 (검정 배경 / 흰 버튼 2개) -->
+  <!-- 첫 화면 -->
   <section class="wrap">
-    <!-- 위: 앱 설치 -->
-    <button id="installBtn" class="btn" disabled style="cursor:not-allowed;">
-      앱 설치
-    </button>
-
-    <!-- 아래: 신바위 연구소 (구글드라이브) -->
-    <a class="btn" href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K">
-      신바위 연구소 입장
-    </a>
-
+    <!-- 위: 앱 설치 (항상 활성화) -->
+    <button id="installBtn" class="btn">앱 설치</button>
+    <!-- 아래: 연구소 입장 -->
+    <a class="btn" href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K">신바위 연구소 입장</a>
     <div id="installMsg" class="hint"></div>
   </section>
 
   <script>
-    // PWA 설치 로직
     const installBtn = document.getElementById("installBtn");
     const installMsg = document.getElementById("installMsg");
     let deferredPrompt = null;
@@ -130,34 +118,38 @@
     const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-    // iOS Safari는 beforeinstallprompt 미지원 → 안내만
-    if (isiOS && isSafari) {
-      installBtn.disabled = true;
-      installBtn.style.cursor = "not-allowed";
-      installMsg.innerHTML = "iPhone/Safari는 <b>공유(⬆️) → 홈 화면에 추가</b>로 설치하세요.";
-    }
-
-    // 설치 가능 신호
+    // 설치 가능 신호가 오면 저장 (크롬/엣지/안드 등)
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      installBtn.disabled = false;
-      installBtn.style.cursor = "pointer";
-      installMsg.textContent = "앱 설치가 가능합니다. 버튼을 눌러 설치하세요.";
+      installMsg.textContent = "앱 설치가 가능합니다!";
     });
 
-    // 설치 버튼 클릭
+    // 항상 활성화된 설치 버튼 클릭 핸들러
     installBtn.addEventListener("click", async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      installMsg.textContent = (outcome === "accepted") ? "설치를 진행합니다…" : "설치를 취소했습니다.";
-      deferredPrompt = null;
-      installBtn.disabled = true;
-      installBtn.style.cursor = "not-allowed";
+      // iOS Safari: 공식 설치 팝업 없음 → 안내
+      if (isiOS && isSafari) {
+        alert("iPhone/Safari는 '공유(⬆️) → 홈 화면에 추가'로 설치하세요.");
+        installMsg.innerHTML = "iPhone/Safari는 <b>공유(⬆️) → 홈 화면에 추가</b>로 설치합니다.";
+        return;
+      }
+
+      // 다른 브라우저: 설치 가능 신호가 있으면 팝업 띄우기
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        installMsg.textContent = (outcome === "accepted")
+          ? "설치를 진행합니다…"
+          : "설치를 취소했습니다.";
+        deferredPrompt = null;
+        return;
+      }
+
+      // 설치 불가/이미 설치 등
+      alert("현재 브라우저는 앱 설치를 지원하지 않거나 이미 설치된 상태일 수 있습니다.");
     });
 
-    // 설치 완료 안내
+    // 설치 완료 시 안내
     window.addEventListener("appinstalled", () => {
       installMsg.textContent = "설치 완료! 앱 실행 시 곧바로 연구소로 이동합니다.";
     });
