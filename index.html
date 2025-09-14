@@ -5,35 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>신바위 문제</title>
 
-  <!-- PWA manifest 연결 (v5) -->
-  <link rel="manifest" href="/shinbawiproblems/manifest.json?v=5">
+  <!-- PWA manifest -->
+  <link rel="manifest" href="/shinbawiproblems/manifest.json?v=7">
   <meta name="theme-color" content="#000000" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-  <!-- (선택) iOS 홈화면 아이콘 품질 보장 -->
   <link rel="apple-touch-icon" href="/shinbawiproblems/icons/icon-192.png">
 
-  <!-- 서비스워커 등록 (v5) + reset 모드 -->
+  <!-- Service Worker -->
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/shinbawiproblems/sw.js?v=5");
-    }
-    // /shinbawiproblems/?reset=1 → SW/캐시 초기화
-    if (location.search.includes("reset=1") && "serviceWorker" in navigator) {
-      (async () => {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        for (const r of regs) { try { await r.unregister(); } catch(e){} }
-        const keys = await caches.keys();
-        for (const k of keys) { if (k.startsWith("shinbawi-cache-")) { try { await caches.delete(k); } catch(e){} } }
-        location.replace(location.origin + "/shinbawiproblems/");
-      })();
+      navigator.serviceWorker.register("/shinbawiproblems/sw.js?v=7");
     }
   </script>
 
-  <!-- 스타일 -->
   <style>
-    :root { color-scheme: dark; }
     body {
       margin: 0;
       background: #000;
@@ -48,199 +34,128 @@
       display: grid;
       gap: 16px;
     }
-    /* 버튼 공통 (앵커/버튼 동일) - 흰 배경, 검정 글씨 */
     .btn {
       display: block;
       width: 100%;
-      box-sizing: border-box;
-      text-align: center;
       padding: 18px 16px;
       border-radius: 12px;
       background: #fff;
       color: #000;
       border: 1px solid #e5e7eb;
       font-weight: 800;
-      line-height: 1.2;
-      text-decoration: none;
+      text-align: center;
       cursor: pointer;
+      text-decoration: none;
     }
     .hint { color: #cbd5e1; font-size: 14px; text-align: center; }
-
-    /* 카톡 인앱 등에서 button 기본 스타일 깨짐 방지 */
-    button.btn {
-      all: unset;
-      display: block;
-      width: 100%;
-      box-sizing: border-box;
-      padding: 18px 16px;
-      border-radius: 12px;
-      background: #fff;
-      color: #000;
-      border: 1px solid #e5e7eb;
-      font-weight: 800;
-      text-align: center;
-      line-height: 1.2;
-      -webkit-appearance: none;
-      appearance: none;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
 
-  <script>
-    const DRIVE_URL   = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
-    const LANDING_URL = "https://shinbw.github.io/shinbawiproblems/";
+<script>
+  const DRIVE_URL   = "https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K";
+  const LANDING_URL = "https://shinbw.github.io/shinbawiproblems/";
 
-    // PWA(설치된 앱)로 실행되면 → 바로 연구소 드라이브로 이동
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      window.navigator.standalone; // iOS PWA
-    if (isStandalone) {
-      location.replace(DRIVE_URL);
+  // PWA 실행이면 바로 드라이브 이동
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone;
+  if (isStandalone) {
+    location.replace(DRIVE_URL);
+  }
+</script>
+
+<section class="wrap">
+  <!-- 항상 활성화된 앱 설치 버튼 -->
+  <button id="installBtn" class="btn">앱 설치</button>
+
+  <!-- 드라이브 바로가기 -->
+  <a class="btn" href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K">신바위 연구소 입장</a>
+  <div id="installMsg" class="hint"></div>
+</section>
+
+<script>
+  let deferredPrompt = null;
+  const installBtn = document.getElementById("installBtn");
+  const installMsg = document.getElementById("installMsg");
+
+  // beforeinstallprompt 이벤트 잡기
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installMsg.textContent = "앱 설치가 가능합니다!";
+  });
+
+  // 설치 버튼: 항상 동작
+  installBtn.addEventListener("click", async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      installMsg.textContent =
+        outcome === "accepted" ? "설치를 진행합니다…" : "설치를 취소했습니다.";
+      deferredPrompt = null;
+    } else {
+      // iOS 등 beforeinstallprompt 미지원 → 안내
+      alert("이 브라우저에서는 '홈 화면에 추가' 기능을 사용해 설치하세요.");
+      installMsg.innerHTML = "iOS Safari: <b>공유(⬆️) → 홈 화면에 추가</b><br>iOS Chrome: 메뉴(⋮) → <b>홈 화면에 추가</b>";
     }
-  </script>
+  });
 
-  <!-- 첫 화면 -->
-  <section class="wrap">
-    <!-- 위: 앱 설치 (항상 활성화) -->
-    <button id="installBtn" class="btn">앱 설치</button>
-    <!-- 아래: 연구소 입장 -->
-    <a class="btn" href="https://drive.google.com/drive/folders/1Iax6j8wGi6z6mV21craLi7TY0u9sW_3K">신바위 연구소 입장</a>
-    <div id="installMsg" class="hint"></div>
-  </section>
+  window.addEventListener("appinstalled", () => {
+    installMsg.textContent = "설치 완료! 앱 실행 시 곧바로 연구소로 이동합니다.";
+  });
+</script>
 
-  <script>
-    const installBtn = document.getElementById("installBtn");
-    const installMsg = document.getElementById("installMsg");
-    let deferredPrompt = null;
+<!-- 카톡 인앱 브라우저 감지 -->
+<script>
+(function () {
+  const isKakao = /KAKAOTALK/i.test(navigator.userAgent);
+  if (!isKakao) return;
 
-    const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // 설치 가능 신호가 오면 저장 (크롬/엣지/안드 등)
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installMsg.textContent = "앱 설치가 가능합니다!";
-    });
+  const $wrap = document.createElement("div");
+  $wrap.style.cssText = `
+    position: fixed; inset: 0; z-index: 9999;
+    background: #000; display:flex; align-items:center; justify-content:center;
+  `;
 
-    // 항상 활성화된 설치 버튼 클릭 핸들러
-    installBtn.addEventListener("click", async () => {
-      // iOS Safari: 공식 설치 팝업 없음 → 안내
-      if (isiOS && isSafari) {
-        alert("iPhone/Safari는 '공유(⬆️) → 홈 화면에 추가'로 설치하세요.");
-        installMsg.innerHTML = "iPhone/Safari는 <b>공유(⬆️) → 홈 화면에 추가</b>로 설치합니다.";
-        return;
-      }
+  const $sheet = document.createElement("div");
+  $sheet.style.cssText = `
+    width:min(560px, 92vw); background:#111; color:#f1f5f9;
+    border-radius:20px; padding:28px; box-shadow:0 6px 32px rgba(0,0,0,.7);
+    text-align:center;
+  `;
 
-      // 다른 브라우저: 설치 가능 신호가 있으면 팝업 띄우기
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        installMsg.textContent = (outcome === "accepted")
-          ? "설치를 진행합니다…"
-          : "설치를 취소했습니다.";
-        deferredPrompt = null;
-        return;
-      }
-
-      // 설치 불가/이미 설치 등
-      alert("현재 브라우저는 앱 설치를 지원하지 않거나 이미 설치된 상태일 수 있습니다.");
-    });
-
-    // 설치 완료 시 안내
-    window.addEventListener("appinstalled", () => {
-      installMsg.textContent = "설치 완료! 앱 실행 시 곧바로 연구소로 이동합니다.";
-    });
-  </script>
-
-  <!-- 카톡 인앱 브라우저 감지 오버레이 (검정 테마, 닫기 버튼 없음) -->
-  <script>
-  (function () {
-    const isKakao = /KAKAOTALK/i.test(navigator.userAgent);
-    if (!isKakao) return;
-
-    const isAndroid = /Android/i.test(navigator.userAgent);
-    const isIOS     = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    // 안드: 크롬으로 "우리 랜딩"을 열도록 유도(카톡 완전 탈출)
-    const chromeIntent =
-      "intent://" + LANDING_URL.replace(/^https?:\/\//, "") +
-      "#Intent;scheme=https;package=com.android.chrome;" +
-      "S.browser_fallback_url=" +
-      encodeURIComponent("https://play.google.com/store/apps/details?id=com.android.chrome") +
-      ";end";
-
-    const $wrap = document.createElement("div");
-    $wrap.style.cssText = `
-      position: fixed; inset: 0; z-index: 9999;
-      background: #000; display:flex; align-items:center; justify-content:center;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Malgun Gothic, Arial, sans-serif;
-    `;
-
-    const $sheet = document.createElement("div");
-    $sheet.style.cssText = `
-      width:min(560px, 92vw); background:#111; color:#f1f5f9;
-      border-radius:20px; padding:28px; box-shadow:0 6px 32px rgba(0,0,0,.7);
-      text-align:center;
-    `;
-
-    const tip = isAndroid
-      ? "오른쪽 <b>하단</b> 점 3개 → <b>다른 브라우저로 열기</b> → <b>Chrome</b>"
-      : "공유(⬆️) → <b>Safari에서 열기</b> 또는 <b>홈 화면에 추가</b>";
-
+  if (isIOS) {
     $sheet.innerHTML = `
-      <h2 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#fff;">카카오톡 인앱 브라우저 감지됨</h2>
-      <p style="margin:0 0 24px;line-height:1.6;color:#cbd5e1;font-size:15px;">
-        원활한 사용을 위해 <b style="color:#38bdf8">${isAndroid ? "Chrome" : "Safari"}</b>에서 열어주세요.<br>
-        <span style="font-size:14px;color:#94a3b8">${tip}</span>
+      <h2 style="color:#fff;font-weight:800;">iOS 인앱 감지됨</h2>
+      <p style="color:#cbd5e1;font-size:15px;margin-bottom:20px;">
+        원활한 사용을 위해 Safari / Chrome / Google 앱 중 하나를 선택해 열어주세요.
       </p>
-
-      <div style="display:grid; gap:14px;">
-        ${isAndroid ? `
-          <a href="${chromeIntent}"
-             style="display:block;padding:14px 0;border-radius:12px;
-                    background:#fff;color:#000;font-weight:800;text-decoration:none;">
-            Chrome으로 열기
-          </a>
-        ` : `
-          <button id="copyLinkBtn"
-                  style="padding:14px 0;border-radius:12px;border:1px solid #333;
-                         background:#fff;color:#000;font-weight:800;cursor:pointer;">
-            링크 복사 → Safari 붙여넣기
-          </button>
-        `}
-        <a href="${LANDING_URL}"
-           style="display:block;padding:12px 0;border-radius:12px;
-                  border:1px solid #333;background:#fff;color:#000;font-weight:800;text-decoration:none;">
-          이 창에서 계속 (인앱)
-        </a>
+      <div style="display:grid; gap:12px;">
+        <a class="btn" href="googlechrome://${LANDING_URL.replace(/^https?:\/\//, "")}">iOS Chrome으로 열기</a>
+        <a class="btn" href="google://${LANDING_URL.replace(/^https?:\/\//, "")}">iOS Google 앱으로 열기</a>
+        <a class="btn" href="${LANDING_URL}">Safari에서 열기</a>
       </div>
-
-      <p style="margin-top:20px;font-size:12px;color:#64748b;">
-        설치(PWA) 후 앱 실행 시 곧바로 신바위 연구소로 이동합니다.
-      </p>
     `;
+  } else {
+    $sheet.innerHTML = `
+      <h2 style="color:#fff;font-weight:800;">카카오톡 인앱 브라우저 감지됨</h2>
+      <p style="color:#cbd5e1;font-size:15px;margin-bottom:20px;">
+        Chrome으로 여는 것이 권장됩니다.
+      </p>
+      <a class="btn" href="intent://${LANDING_URL.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end">
+        Chrome으로 열기
+      </a>
+      <a class="btn" href="${LANDING_URL}">이 창에서 계속 (인앱)</a>
+    `;
+  }
 
-    $wrap.appendChild($sheet);
-    document.body.appendChild($wrap);
-
-    // iOS: 랜딩 링크 복사
-    if (isIOS) {
-      const copyBtn = $sheet.querySelector("#copyLinkBtn");
-      copyBtn?.addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(LANDING_URL);
-          copyBtn.textContent = "✅ 복사됨! Safari에 붙여넣으세요";
-          copyBtn.style.background = "#e5e7eb";
-        } catch {
-          alert("복사 실패: 주소창을 길게 눌러 직접 복사해주세요.");
-        }
-      });
-    }
-  })();
-  </script>
+  $wrap.appendChild($sheet);
+  document.body.appendChild($wrap);
+})();
+</script>
 
 </body>
 </html>
