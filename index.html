@@ -32,12 +32,12 @@
       margin: 40px auto;
       padding: 16px;
       display: grid;
-      gap: 16px;
+      gap: 20px;
     }
     .btn {
       display: block;
       width: 100%;
-      padding: 18px 16px;
+      padding: 28px 16px;  /* ← 세로 길이 늘림 */
       border-radius: 12px;
       background: #fff;
       color: #000;
@@ -46,8 +46,13 @@
       text-align: center;
       cursor: pointer;
       text-decoration: none;
+      box-sizing: border-box; /* 크기 균일화 */
     }
-    .hint { color: #cbd5e1; font-size: 14px; text-align: center; }
+    .hint { 
+      color: #cbd5e1; 
+      font-size: 14px; 
+      text-align: center; 
+    }
   </style>
 </head>
 <body>
